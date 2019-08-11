@@ -13,4 +13,3 @@ class TestApp(TestCase):
 
         self.assertEqual(proc.returncode, 0)
         self.assertEqual(proc.stdout, b"Hello ...\n... World!\n")
-

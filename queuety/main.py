@@ -1,33 +1,46 @@
-#!/usr/bin/env python
-
-from queue import Queue
 import asyncio
+import logging
+import queue
+import random
+
+from typing import Any, Coroutine, Generator
 
 
-q = Queue(100)
+logger = logging.getLogger(__name__)
+
+q = queue.Queue(100)
 
 
-async def enqueue(n: int):
+def enqueue(n: int) -> None:
     for _i in range(n):
         msg = f"message {_i}"
         q.put(msg)
-        await asyncio.sleep(1)
-        print(f"enqueued {msg}")
+        logger.info("enqueued %s", msg)
 
 
-def dequeue(n: int):
-    for _i in range(n):
-        msg = q.get()
-        await asyncio.sleep(2)
-        print(f"dequeued {msg}")
+def dequeue() -> Generator[Any, None, None]:
+    while True:
+        try:
+            msg = q.get(block=False)
+        except queue.Empty:
+            break
+        else:
+            logger.info("dequeued %s", msg)
+
+        yield msg
 
 
-async def main():
-    msg_num = 10
-    print("Start ...")
-    await asyncio.gather(enqueue(msg_num), dequeue(msg_num))
-    print("... End.")
+async def handle_dequeued(msg: Any) -> Coroutine[None, None, None]:
+    logger.info(f"handling dequeued %s", msg)
+    lag = random.randint(0, 3)
+    await asyncio.sleep(lag)
+    logger.info("finished handling %s", msg)
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+async def main(n: int = 10) -> None:
+    logger.info("Start ...")
+
+    enqueue(n)
+    await asyncio.gather(*[handle_dequeued(dequeued) for dequeued in dequeue()])
+
+    logger.info("... End.")

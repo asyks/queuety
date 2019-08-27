@@ -22,7 +22,5 @@ def dequeue(q: queue.Queue) -> Generator[Any, None, None]:
 
 
 async def handle_dequeued(msg: Any) -> Coroutine[None, None, None]:
-    logger.info(f"handling dequeued %s", msg)
-    lag = random.randint(0, 3)
-    await asyncio.sleep(lag)
+    await asyncio.sleep(random.randint(0, 3))
     logger.info("finished handling %s", msg)

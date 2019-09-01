@@ -6,4 +6,5 @@ from . import log, entry
 
 
 log.setup()
-asyncio.run(entry.main())
+asyncio.run(entry.simulate_ingress())
+asyncio.run(entry.simulate_egress())

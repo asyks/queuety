@@ -14,15 +14,15 @@ class Message:
         super().__init__()
         self.id: uuid.UUID = uuid.uuid4()
         self.body: str = f"message {self.id}"
-        self.handled: bool = False
+        self.acked: bool = False
 
 
 async def enqueue(q: asyncio.Queue, pub_id: int) -> Coroutine[None, None, None]:
     while True:
         msg: Message = Message()
-        logger.info("%s handling %s", pub_id, msg.id)
+        logger.info("pub %s handling %s", pub_id, msg.id)
         asyncio.create_task(q.put(msg))
-        logger.info("%s enqueued %s", pub_id, msg.id)
+        logger.info("pub %s enqueued %s", pub_id, msg.id)
         await asyncio.sleep(random.randint(0, 2))
 
     await q.put(None)

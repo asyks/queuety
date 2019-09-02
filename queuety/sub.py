@@ -17,5 +17,11 @@ async def dequeue(q: asyncio.Queue) -> Coroutine[None, None, None]:
             break
 
         logger.info("dequeued %s", msg.id)
-        await asyncio.sleep(random.randint(0, 2))
-        logger.info("finished %s", msg.id)
+        if msg.acked is False:
+            asyncio.create_task(handle_dequeued_msg(msg))
+
+
+async def handle_dequeued_msg(msg: Message) -> Coroutine[None, None, None]:
+    await asyncio.sleep(random.randint(0, 2))
+    msg.acked = True
+    logger.info("finished %s", msg.id)

@@ -1,10 +1,7 @@
 #!/usr/bin/env python
-
-import asyncio
-
-from . import log, entry
+from . import entry, log
 
 
-log.setup()
-asyncio.run(entry.simulate_ingress())
-asyncio.run(entry.simulate_egress())
+if __name__ == "__main__":
+    log.setup()
+    entry.simulate()

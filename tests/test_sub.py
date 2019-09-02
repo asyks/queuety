@@ -1,22 +1,15 @@
-from unittest import mock, TestCase
+from unittest import TestCase
 import asyncio
 
-from tests.util import CoroutineMock
 import queuety
 
 
-@mock.patch("queuety.sub.handle_dequeued", new_callable=CoroutineMock)
 class TestSubscriber(TestCase):
     def setUp(self):
         pass
 
-    def test_sub_default_msg_num(self, mock_handle_dequeued):
-        asyncio.run(queuety.entry.main())
-
-        self.assertEqual(mock_handle_dequeued.call_count, 10)
-
-    def test_sub_custom_msg_num(self, mock_handle_dequeued):
-        num_messages = 8
-        asyncio.run(queuety.entry.main(num_messages))
-
-        self.assertEqual(mock_handle_dequeued.call_count, num_messages)
+    def test_pub_sub(self):
+        q = asyncio.Queue()
+        num_messages = 5
+        asyncio.run(queuety.pub.enqueue(q, num_messages))
+        asyncio.run(queuety.sub.dequeue(q))

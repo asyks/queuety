@@ -1,20 +1,18 @@
 import asyncio
 import logging
-import queue
 import random
 
-from typing import Any, Coroutine
+from typing import Coroutine
 
 
 logger = logging.getLogger(__name__)
 
 
-async def enqueue(q: queue.Queue, msg: Any) -> Coroutine[None, None, None]:
-    async def _enqueue(q: queue.Queue, msg: Any) -> Coroutine[None, None, None]:
+async def enqueue(q: asyncio.Queue, n: int) -> Coroutine[None, None, None]:
+    for msg in (f"message {_i}" for _i in range(n)):
         logger.info("handling %s", msg)
-        await asyncio.sleep(1)
-        q.put(msg)
+        await asyncio.sleep(random.randint(0, 2))
+        await q.put(msg)
         logger.info("enqueued %s", msg)
 
-    asyncio.create_task(_enqueue(q, msg))
-    await asyncio.sleep(random.randint(0, 2))
+    await q.put(None)

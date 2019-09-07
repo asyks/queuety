@@ -1,25 +1,28 @@
 import asyncio
 import logging
 import random
+import typing as t
 import uuid
-
-from typing import Coroutine
 
 
 logger = logging.getLogger(__name__)
 
 
 class Message:
-    def __init__(self):
+    def __init__(self, tasks: t.Iterable[str]):
         super().__init__()
         self.id: uuid.UUID = uuid.uuid4()
         self.body: str = f"message {self.id}"
         self.acked: bool = False
+        self.tasks: t.Dict[str, bool] = {
+            task_name: False for task_name in tasks
+        }
 
 
-async def enqueue(q: asyncio.Queue, pub_id: int) -> Coroutine[None, None, None]:
+async def enqueue(q: asyncio.Queue, pub_id: int) -> t.Coroutine:
+    tasks = ["task_1", "task_2", "task_3"]
     while True:
-        msg: Message = Message()
+        msg: Message = Message(tasks)
         logger.info("pub %s handling %s", pub_id, msg.id)
         asyncio.create_task(q.put(msg))
         logger.info("pub %s enqueued %s", pub_id, msg.id)

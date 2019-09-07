@@ -11,7 +11,7 @@ def simulate(n: int = 10):
     q = asyncio.Queue()
     loop = asyncio.get_event_loop()
 
-    pub_coros = [pub.enqueue(q, pub_id) for pub_id in range(0, 1)]
+    pub_coros = [pub.enqueue(q, pub_id) for pub_id in range(0, 2)]
 
     try:
         [loop.create_task(coro) for coro in pub_coros]

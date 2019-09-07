@@ -14,6 +14,7 @@ class Message:
         self.id: uuid.UUID = uuid.uuid4()
         self.body: str = f"message {self.id}"
         self.acked: bool = False
+        self.extend_count: int = 0
         self.tasks: t.Dict[str, bool] = {
             task_name: False for task_name in tasks
         }

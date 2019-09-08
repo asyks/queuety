@@ -19,7 +19,8 @@ async def shutdown(signal, loop) -> t.Coroutine:
     tasks_to_cancel: t.List[asyncio.Task] = []
     for task in asyncio.all_tasks():
         if task is not asyncio.current_task():
-            tasks_to_cancel.append(task.cancel())
+            task.cancel()
+            tasks_to_cancel.append(task)
 
     logging.info("Cancelling %i oustanding tasks" % len(tasks_to_cancel))
     await asyncio.gather(*tasks_to_cancel, return_exceptions=True)
@@ -41,7 +42,7 @@ def simulate(n: int = 10):
 
     q = asyncio.Queue()
 
-    pub_coros = [pub.enqueue(q, pub_id) for pub_id in range(0, 2)]
+    pub_coros = [pub.enqueue(q, pub_id) for pub_id in range(0, 1)]
 
     try:
         [loop.create_task(coro) for coro in pub_coros]

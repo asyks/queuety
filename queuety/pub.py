@@ -9,15 +9,13 @@ logger = logging.getLogger(__name__)
 
 
 class Message:
-    def __init__(self, tasks: t.Iterable[str]):
+    def __init__(self, routes: t.Iterable[str]):
         super().__init__()
         self.id: uuid.UUID = uuid.uuid4()
         self.body: str = f"message {self.id}"
         self.acked: bool = False
         self.extend_count: int = 0
-        self.tasks: t.Dict[str, bool] = {
-            task_name: False for task_name in tasks
-        }
+        self.routes: t.Dict[str, bool] = {route: False for route in routes}
 
 
 async def enqueue(q: asyncio.Queue, pub_id: int) -> t.Coroutine:

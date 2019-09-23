@@ -9,9 +9,6 @@ from . import pub, sub
 logger = logging.getLogger(__name__)
 
 
-shutdown_signals = (signal.SIGHUP, signal.SIGTERM, signal.SIGINT)
-
-
 async def shutdown(signal, loop) -> t.Coroutine:
     logging.info("Received exit signal %s...", signal.name)
     logging.info("Nacking outstanding messages")
@@ -28,25 +25,29 @@ async def shutdown(signal, loop) -> t.Coroutine:
     loop.stop()
 
 
-def handle_signal(sig: signal.signal, loop: asyncio.AbstractEventLoop) -> None:
-    asyncio.create_task(shutdown(sig, loop))
-
-
 def simulate(n: int = 10):
-    loop = asyncio.get_event_loop()
+    loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
 
-    for sig in shutdown_signals:
+    for shutdown_signal in (signal.SIGHUP, signal.SIGTERM, signal.SIGINT):
         loop.add_signal_handler(
-            sig, lambda sig=sig: asyncio.create_task(shutdown(sig, loop))
+            shutdown_signal, lambda sig=shutdown_signal: asyncio.create_task(
+                shutdown(sig, loop)
+            )
         )
 
     q = asyncio.Queue()
 
+    # Instantiate multiple publish coroutines
     pub_coros = [pub.enqueue(q, pub_id) for pub_id in range(0, 2)]
+    # Instantiate multiple subscription coroutines
+    sub_coros = [sub.dequeue(q, sub_id) for sub_id in range(0, 2)]
 
     try:
+        # Create a task for each publish coroutine
         [loop.create_task(coro) for coro in pub_coros]
-        loop.create_task(sub.dequeue(q))
+        # Create a task for each subscription coroutine
+        [loop.create_task(coro) for coro in sub_coros]
+
         loop.run_forever()
     finally:
         loop.close()

@@ -44,4 +44,4 @@ COPY setup.cfg .
 COPY queuety queuety
 COPY tests tests
 
-CMD [ "python", "queuety/main.py"]
+ENTRYPOINT [ "python", "-m", "queuety"]

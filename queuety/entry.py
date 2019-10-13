@@ -9,20 +9,36 @@ from . import pub, sub
 logger = logging.getLogger(__name__)
 
 
-async def shutdown(signal, loop) -> t.Coroutine:
-    logging.info("Received exit signal %s...", signal.name)
+async def shutdown(
+    loop: asyncio.AbstractEventLoop, sig: t.Optional[signal.Signals] = None
+) -> t.Coroutine:
+    if isinstance(sig, signal.Signals):
+        logging.info("Received exit signal %s...", sig.name)
+
     logging.info("Nacking outstanding messages")
 
     tasks_to_cancel: t.List[asyncio.Task] = []
     for task in asyncio.all_tasks():
         if task is not asyncio.current_task():
-            task.cancel()
             tasks_to_cancel.append(task)
+
+    for task in tasks_to_cancel:
+        task.cancel()
 
     logging.info("Cancelling %i oustanding tasks" % len(tasks_to_cancel))
     await asyncio.gather(*tasks_to_cancel, return_exceptions=True)
     logging.info("Stopping event loop")
     loop.stop()
+
+
+def handle_exception(
+    loop: asyncio.AbstractEventLoop, context
+) -> None:
+    msg = context.get(
+        "exception", context["message"]  # "exception" may not be set, "message" should
+    )
+    logging.error(f"Caught exception: {msg}")
+    logging.info("Shutting down...")
 
 
 def simulate(n: int = 10):
@@ -31,16 +47,18 @@ def simulate(n: int = 10):
     for shutdown_signal in (signal.SIGHUP, signal.SIGTERM, signal.SIGINT):
         loop.add_signal_handler(
             shutdown_signal, lambda sig=shutdown_signal: asyncio.create_task(
-                shutdown(sig, loop)
+                shutdown(loop, sig=sig)
             )
         )
+
+    loop.set_exception_handler(handle_exception)
 
     q = asyncio.Queue()
 
     # Instantiate multiple publish coroutines
-    pub_coros = [pub.enqueue(q, pub_id) for pub_id in range(0, 2)]
+    pub_coros = [pub.enqueue(q, pub_id) for pub_id in range(0, 1)]
     # Instantiate multiple subscription coroutines
-    sub_coros = [sub.dequeue(q, sub_id) for sub_id in range(0, 2)]
+    sub_coros = [sub.dequeue(q, sub_id) for sub_id in range(0, 1)]
 
     try:
         # Create a task for each publish coroutine

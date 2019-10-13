@@ -19,12 +19,11 @@ class Message:
 
 
 async def enqueue(q: asyncio.Queue, pub_id: int) -> t.Coroutine:
-    tasks = ["task_1", "task_2", "task_3"]
+    routes = ["task_1", "task_2", "task_3"]
+
     while True:
-        msg: Message = Message(tasks)
+        msg: Message = Message(routes)
         logger.info("pub %s handling %s", pub_id, msg.id)
         asyncio.create_task(q.put(msg))
         logger.info("pub %s enqueued %s", pub_id, msg.id)
         await asyncio.sleep(random.randint(0, 2))
-
-    await q.put(None)

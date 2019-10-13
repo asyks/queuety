@@ -20,8 +20,6 @@ async def extend_until_complete(msg: Message, event: asyncio.Event) -> t.Corouti
 async def ack_dequeued_msg(msg: Message, event: asyncio.Event) -> t.Coroutine:
     await event.wait()
     await asyncio.sleep(random.randint(0, 1))
-    if random.randrange(1, 5) == 3:
-        raise Exception(f"Could not save {msg}")
     msg.acked = True
     logger.info("Acknowledged %s", msg.id)
 
@@ -51,7 +49,5 @@ async def handle_dequeued_msg(msg: Message) -> t.Coroutine:
 async def dequeue(q: asyncio.Queue, sub_id: int) -> t.Coroutine:
     while True:
         msg: Message = await q.get()
-        if random.randrange(1, 5) == 3:
-            raise Exception(f"Could not consume {msg}")
         logger.info("sub %s dequeued %s", sub_id, msg.id)
         asyncio.create_task(handle_dequeued_msg(msg))

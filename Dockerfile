@@ -43,5 +43,3 @@ COPY setup.py .
 COPY setup.cfg .
 COPY queuety queuety
 COPY tests tests
-
-CMD [ "python", "queuety/main.py"]

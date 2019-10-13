@@ -8,8 +8,18 @@ class TestSubscriber(TestCase):
     def setUp(self):
         pass
 
-    def test_pub_sub(self):
-        q = asyncio.Queue()
-        num_messages = 5
-        asyncio.run(queuety.pub.enqueue(q, num_messages))
-        asyncio.run(queuety.sub.dequeue(q))
+    def test_handled_dequeued_msg(self):
+        TEST_ROUTE = "task1"
+
+        msg = queuety.model.Message(routes=[TEST_ROUTE])
+        asyncio.run(queuety.sub.handle_dequeued_msg(msg))
+
+        self.assertTrue(msg.routes[TEST_ROUTE])
+
+    def test_handle_route(self):
+        TEST_ROUTE = "task1"
+
+        msg = queuety.model.Message(routes=[TEST_ROUTE])
+        asyncio.run(queuety.sub.handle_route(TEST_ROUTE, msg))
+
+        self.assertTrue(msg.routes[TEST_ROUTE])

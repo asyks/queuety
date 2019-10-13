@@ -36,7 +36,7 @@ async def handle_dequeued_msg(msg: Message) -> t.Coroutine:
     asyncio.create_task(ack_dequeued_msg(msg, event))
 
     results = await asyncio.gather(
-        *(handle_route(task, msg) for task in msg.routes), return_exceptions=True
+        *(handle_route(route, msg) for route in msg.routes), return_exceptions=True
     )
 
     for result in results:

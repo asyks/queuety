@@ -26,8 +26,11 @@ async def shutdown(
         task.cancel()
 
     logging.info("Cancelling %i oustanding tasks" % len(tasks_to_cancel))
+
     await asyncio.gather(*tasks_to_cancel, return_exceptions=True)
+
     logging.info("Stopping event loop")
+
     loop.stop()
 
 
@@ -38,7 +41,9 @@ def handle_exception(
         "exception", context["message"]  # "exception" may not be set, "message" should
     )
     logging.error(f"Caught exception: {msg}")
+
     logging.info("Shutting down...")
+    asyncio.create_task(shutdown(loop))
 
 
 def simulate(n: int = 10):

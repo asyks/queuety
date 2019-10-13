@@ -3,7 +3,8 @@ import logging
 import random
 import typing as t
 
-from .pub import Message
+from .model import Message
+from . import constants
 
 
 logger = logging.getLogger(__name__)
@@ -13,7 +14,7 @@ async def extend_until_complete(msg: Message, event: asyncio.Event) -> t.Corouti
     while not event.is_set():
         msg.extend_count += 1
         logging.info("Extended deadline for %s", msg.id)
-        await asyncio.sleep(random.randint(0, 1))
+        await asyncio.sleep(constants.MESSAGE_EXTEND_DELAY)
 
 
 async def ack_dequeued_msg(msg: Message, event: asyncio.Event) -> t.Coroutine:

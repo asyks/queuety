@@ -10,3 +10,6 @@ import queuety
 class TestPublisher(TestCase):
     def setUp(self):
         pass
+
+    def test_enqueue_messages(self, mock_async_queue):
+        pass

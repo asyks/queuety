@@ -24,10 +24,10 @@ async def ack_dequeued_msg(msg: Message, event: asyncio.Event) -> t.Coroutine:
     logger.info("Acknowledged %s", msg.id)
 
 
-async def handle_route(task: str, msg: Message) -> t.Coroutine:
+async def handle_route(route: str, msg: Message) -> t.Coroutine:
     await asyncio.sleep(random.randint(0, 2))
-    msg.routes[task] = True
-    logger.info("Handled task %s for %s", task, msg.id)
+    msg.routes[route] = True
+    logger.info("Handled route %s for %s", route, msg.id)
 
 
 async def handle_dequeued_msg(msg: Message) -> t.Coroutine:

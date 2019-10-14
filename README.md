@@ -27,7 +27,7 @@ queuty is configured to shutdown when it recieves a terminal (SIGTERM), interrup
 
 e.g.
 ```
-> pkill -TERM -f "python -m queuety
+> pkill -TERM -f "python -m queuety"
 ...
 ```
 

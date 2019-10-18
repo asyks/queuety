@@ -12,7 +12,9 @@ class TestSubscriber(TestCase):
         TEST_ROUTE = "task1"
 
         msg = queuety.model.Message(routes=[TEST_ROUTE])
-        asyncio.run(queuety.sub.handle_dequeued_msg(msg))
+        asyncio.run(
+            queuety.sub.handle_dequeued_msg(queuety.sub.simulate_handle_route, msg)
+        )
 
         self.assertTrue(msg.routes[TEST_ROUTE])
 
@@ -20,6 +22,6 @@ class TestSubscriber(TestCase):
         TEST_ROUTE = "task1"
 
         msg = queuety.model.Message(routes=[TEST_ROUTE])
-        asyncio.run(queuety.sub.handle_route(TEST_ROUTE, msg))
+        asyncio.run(queuety.sub.simulate_handle_route(TEST_ROUTE, msg))
 
         self.assertTrue(msg.routes[TEST_ROUTE])

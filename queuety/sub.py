@@ -24,19 +24,19 @@ async def ack_dequeued_msg(msg: Message, event: asyncio.Event) -> t.Coroutine:
     logger.info("Acknowledged %s", msg.id)
 
 
-async def handle_route(route: str, msg: Message) -> t.Coroutine:
+async def simulate_handle_route(route: str, msg: Message) -> t.Coroutine:
     await asyncio.sleep(random.randint(0, 2))
     msg.routes[route] = True
     logger.info("Handled route %s for %s", route, msg.id)
 
 
-async def handle_dequeued_msg(msg: Message) -> t.Coroutine:
+async def handle_dequeued_msg(handler: t.Callable, msg: Message) -> t.Coroutine:
     event = asyncio.Event()
     asyncio.create_task(extend_until_complete(msg, event))
     asyncio.create_task(ack_dequeued_msg(msg, event))
 
     results = await asyncio.gather(
-        *(handle_route(route, msg) for route in msg.routes), return_exceptions=True
+        *(handler(route, msg) for route in msg.routes), return_exceptions=True
     )
 
     for result in results:
@@ -46,8 +46,16 @@ async def handle_dequeued_msg(msg: Message) -> t.Coroutine:
     event.set()
 
 
-async def dequeue(q: asyncio.Queue, sub_id: int) -> t.Coroutine:
+async def dequeue(q: asyncio.Queue, sub_id: int, handler: t.Callable) -> t.Coroutine:
     while True:
         msg: Message = await q.get()
         logger.info("sub %s dequeued %s", sub_id, msg.id)
-        asyncio.create_task(handle_dequeued_msg(msg))
+        asyncio.create_task(handle_dequeued_msg(handler, msg))
+
+
+async def simulate_dequeue(q: asyncio.Queue, sub_id: int) -> t.Coroutine:
+    asyncio.create_task(dequeue(q, sub_id, simulate_handle_route))
+
+
+async def real_dequeue(q: asyncio.Queue, sub_id: int) -> t.Coroutine:
+    asyncio.create_task(dequeue(q, sub_id, simulate_handle_route))

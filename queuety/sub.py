@@ -49,7 +49,7 @@ class BaseSubsriber:
 
         for result in results:
             if isinstance(result, Exception):
-                logging.error(f"Handling general error: {result}")
+                logging.error("Handling error %s", result)
 
         event.set()
 

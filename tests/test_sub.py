@@ -8,7 +8,7 @@ import queuety
 
 class TestSubscriber(TestCase):
     @pytest.mark.asyncio
-    def test_handled_dequeued_msg(self):
+    def test_handle_dequeued_msg(self):
         TEST_ROUTE = "task1"
 
         queue: asyncio.Queue = asyncio.Queue()

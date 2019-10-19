@@ -1,4 +1,4 @@
-from unittest import TestCase
+from unittest import TestCase, mock
 import asyncio
 
 import pytest
@@ -6,25 +6,25 @@ import pytest
 import queuety
 
 
-class TestSubscriber(TestCase):
-    @pytest.mark.asyncio
-    def test_handle_dequeued_msg(self):
-        TEST_ROUTE = "task1"
+TEST_ROUTE = "task1"
 
-        queue: asyncio.Queue = asyncio.Queue()
-        msg = queuety.model.Message(routes=[TEST_ROUTE])
-        subscriber = queuety.sub.SimulatedSubscriber(queue)
-        asyncio.run(subscriber.handle_message(msg))
 
-        assert msg.routes[TEST_ROUTE] is True
+@pytest.fixture
+def message():
+    return queuety.model.Message(routes=[TEST_ROUTE])
 
-    @pytest.mark.asyncio
-    def test_handle_route(self):
-        TEST_ROUTE = "task1"
 
-        queue: asyncio.Queue = asyncio.Queue()
-        msg = queuety.model.Message(routes=[TEST_ROUTE])
-        subscriber = queuety.sub.SimulatedSubscriber(queue)
-        asyncio.run(subscriber.handle_route(TEST_ROUTE, msg))
+@pytest.mark.asyncio
+async def test_handle_dequeued_msg(message):
+    subscriber = queuety.sub.SimulatedSubscriber(mock.Mock())
+    await subscriber.handle_message(message)
 
-        assert msg.routes[TEST_ROUTE] is True
+    assert message.routes[TEST_ROUTE] is True
+
+
+@pytest.mark.asyncio
+async def test_handle_route(message):
+    subscriber = queuety.sub.SimulatedSubscriber(mock.Mock())
+    await subscriber.handle_route(TEST_ROUTE, message)
+
+    assert message.routes[TEST_ROUTE] is True

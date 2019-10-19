@@ -1,27 +1,30 @@
 from unittest import TestCase
 import asyncio
 
+import pytest
+
 import queuety
 
 
 class TestSubscriber(TestCase):
-    def setUp(self):
-        pass
-
+    @pytest.mark.asyncio
     def test_handled_dequeued_msg(self):
         TEST_ROUTE = "task1"
 
+        queue: asyncio.Queue = asyncio.Queue()
         msg = queuety.model.Message(routes=[TEST_ROUTE])
-        asyncio.run(
-            queuety.sub.handle_dequeued_msg(queuety.sub.simulate_handle_route, msg)
-        )
+        subscriber = queuety.sub.SimulatedSubscriber(queue)
+        asyncio.run(subscriber.handle_message(msg))
 
-        self.assertTrue(msg.routes[TEST_ROUTE])
+        assert msg.routes[TEST_ROUTE] is True
 
+    @pytest.mark.asyncio
     def test_handle_route(self):
         TEST_ROUTE = "task1"
 
+        queue: asyncio.Queue = asyncio.Queue()
         msg = queuety.model.Message(routes=[TEST_ROUTE])
-        asyncio.run(queuety.sub.simulate_handle_route(TEST_ROUTE, msg))
+        subscriber = queuety.sub.SimulatedSubscriber(queue)
+        asyncio.run(subscriber.handle_route(TEST_ROUTE, msg))
 
-        self.assertTrue(msg.routes[TEST_ROUTE])
+        assert msg.routes[TEST_ROUTE] is True

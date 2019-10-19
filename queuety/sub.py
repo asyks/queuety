@@ -2,6 +2,7 @@ import asyncio
 import logging
 import random
 import typing as t
+import uuid
 
 from .model import Message
 from . import constants
@@ -24,38 +25,48 @@ async def ack_dequeued_msg(msg: Message, event: asyncio.Event) -> t.Coroutine:
     logger.info("Acknowledged %s", msg.id)
 
 
-async def simulate_handle_route(route: str, msg: Message) -> t.Coroutine:
-    await asyncio.sleep(random.randint(0, 2))
-    msg.routes[route] = True
-    logger.info("Handled route %s for %s", route, msg.id)
+class BaseSubsriber:
+
+    def __init__(self, queue: asyncio.Queue) -> None:
+        self.queue = queue
+        self.subscriber_id = uuid.uuid4()
+
+        super().__init__()
+
+    async def handle_route(self, route: str, msg: Message) -> t.Coroutine:
+        raise NotImplementedError
+
+    async def handle_message(self, msg: Message) -> t.Coroutine:
+        event = asyncio.Event()
+        asyncio.create_task(extend_until_complete(msg, event))
+        asyncio.create_task(ack_dequeued_msg(msg, event))
+
+        results = await asyncio.gather(
+            *(
+                self.handle_route(route, msg) for route in msg.routes
+            ), return_exceptions=True
+        )
+
+        for result in results:
+            if isinstance(result, Exception):
+                logging.error(f"Handling general error: {result}")
+
+        event.set()
+
+    async def dequeue(self):
+        while True:
+            msg: Message = await self.queue.get()
+            logger.info("Subscriber %s dequeued %s", self.subscriber_id, msg.id)
+            asyncio.create_task(self.handle_message(msg))
 
 
-async def handle_dequeued_msg(handler: t.Callable, msg: Message) -> t.Coroutine:
-    event = asyncio.Event()
-    asyncio.create_task(extend_until_complete(msg, event))
-    asyncio.create_task(ack_dequeued_msg(msg, event))
+class SimulatedSubscriber(BaseSubsriber):
 
-    results = await asyncio.gather(
-        *(handler(route, msg) for route in msg.routes), return_exceptions=True
-    )
+    async def handle_route(self, route: str, msg: Message) -> t.Coroutine:
+        """Simulate route handling for a message.
 
-    for result in results:
-        if isinstance(result, Exception):
-            logging.error(f"Handling general error: {result}")
-
-    event.set()
-
-
-async def dequeue(q: asyncio.Queue, sub_id: int, handler: t.Callable) -> t.Coroutine:
-    while True:
-        msg: Message = await q.get()
-        logger.info("sub %s dequeued %s", sub_id, msg.id)
-        asyncio.create_task(handle_dequeued_msg(handler, msg))
-
-
-async def simulate_dequeue(q: asyncio.Queue, sub_id: int) -> t.Coroutine:
-    asyncio.create_task(dequeue(q, sub_id, simulate_handle_route))
-
-
-async def real_dequeue(q: asyncio.Queue, sub_id: int) -> t.Coroutine:
-    asyncio.create_task(dequeue(q, sub_id, simulate_handle_route))
+        Suspend the route for a random, realistic, but short amount of time.
+        """
+        await asyncio.sleep(random.randint(0, 2))
+        msg.routes[route] = True
+        logger.info("Handled route %s for %s", route, msg.id)

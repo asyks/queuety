@@ -16,13 +16,15 @@ RUN mkdir -p /opt/queuety
 
 WORKDIR /opt/queuety
 COPY requirements.txt .
+COPY requirements-test.txt .
 COPY setup.py .
 COPY setup.cfg .
 
-RUN python3 -m pip install --upgrade pip==19.0.1 \
+RUN python3 -m pip install --upgrade pip==19.3.1 \
     && virtualenv -p python3 /opt/queuety-virtualenv \
     && . /opt/queuety-virtualenv/bin/activate \
-    && pip install -r requirements.txt
+    && pip install -r requirements.txt \
+    && pip install -r requirements-test.txt
 
 FROM ${BASE_IMAGE}
 
@@ -39,6 +41,7 @@ COPY --from=builder /opt/queuety-virtualenv /opt/queuety-virtualenv
 
 WORKDIR /opt/queuety
 COPY requirements.txt .
+COPY requirements-test.txt .
 COPY setup.py .
 COPY setup.cfg .
 COPY queuety queuety

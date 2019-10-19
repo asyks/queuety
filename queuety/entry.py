@@ -46,7 +46,7 @@ def handle_exception(
     asyncio.create_task(shutdown(loop))
 
 
-def main(publish: t.Callable, subscribe: t.Callable) -> None:
+def main(publish: t.Callable, subscriber: object) -> None:
     loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
 
     for shutdown_signal in (signal.SIGHUP, signal.SIGTERM, signal.SIGINT):
@@ -63,7 +63,10 @@ def main(publish: t.Callable, subscribe: t.Callable) -> None:
     # Instantiate multiple publish coroutines
     pub_coros = [publish(q, pub_id) for pub_id in range(0, 1)]
     # Instantiate multiple subscription coroutines
-    sub_coros = [subscribe(q, sub_id) for sub_id in range(0, 1)]
+    sub_coros = []
+    for _ in range(0, 1):
+        sub = subscriber(queue=q)
+        sub_coros.append(sub.dequeue())
 
     try:
         # Create a task for each publish coroutine
@@ -78,7 +81,7 @@ def main(publish: t.Callable, subscribe: t.Callable) -> None:
 
 
 def run_simulation() -> None:
-    main(pub.simulate_enqueue, sub.simulate_dequeue)
+    main(pub.simulate_enqueue, sub.SimulatedSubscriber)
 
 
 def run() -> None:

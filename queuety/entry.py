@@ -46,7 +46,7 @@ def handle_exception(
     asyncio.create_task(shutdown(loop))
 
 
-def main(publish: t.Callable, subscriber: object) -> None:
+def main(publisher: pub.BasePublisher, subscriber: sub.BaseSubsriber) -> None:
     loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
 
     for shutdown_signal in (signal.SIGHUP, signal.SIGTERM, signal.SIGINT):
@@ -55,14 +55,15 @@ def main(publish: t.Callable, subscriber: object) -> None:
                 shutdown(loop, sig=sig)
             )
         )
-
     loop.set_exception_handler(handle_exception)
 
     q = asyncio.Queue()
-
-    # Instantiate multiple publish coroutines
-    pub_coros = [publish(q, pub_id) for pub_id in range(0, 1)]
-    # Instantiate multiple subscription coroutines
+    # Instantiate publish coroutines
+    pub_coros = []
+    for _ in range(0, 1):
+        pub = publisher(queue=q)
+        pub_coros.append(pub.enqueue())
+    # Instantiate subscription coroutines
     sub_coros = []
     for _ in range(0, 1):
         sub = subscriber(queue=q)
@@ -81,8 +82,8 @@ def main(publish: t.Callable, subscriber: object) -> None:
 
 
 def run_simulation() -> None:
-    main(pub.simulate_enqueue, sub.SimulatedSubscriber)
+    main(pub.SimulatedPublisher, sub.SimulatedSubscriber)
 
 
 def run() -> None:
-    main(pub.simulate_enqueue, sub.dequeue)
+    main(pub.SimulatedPublisher, sub.SimulatedSubscriber)  # TODO: add real pub/sub

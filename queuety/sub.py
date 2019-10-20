@@ -53,7 +53,7 @@ class BaseSubsriber:
 
         event.set()
 
-    async def dequeue(self):
+    async def dequeue(self) -> t.Coroutine:
         while True:
             msg: Message = await self.queue.get()
             logger.info("Subscriber %s dequeued %s", self.subscriber_id, msg.id)

@@ -19,18 +19,18 @@ class BasePublisher:
 
         super().__init__()
 
-    def get_message_from_ingress(self) -> Message:
+    def get_message_from_ingress(self) -> None:
         raise NotImplementedError
 
     async def enqueue(self) -> t.Coroutine:
         while True:
-            msg = self.get_message_from_ingress()
+            msg: Message = self.get_message_from_ingress()
             logger.info("Publisher %s handling %s", self.publisher_id, msg.id)
 
             asyncio.create_task(self.queue.put(msg))
             logger.info("Publisher %s enqueued %s", self.publisher_id, msg.id)
 
-            await asyncio.sleep(random.randint(0, 2))
+            await asyncio.sleep(random.random())
 
 
 class SimulatedPublisher(BasePublisher):

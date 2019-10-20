@@ -67,6 +67,6 @@ class SimulatedSubscriber(BaseSubsriber):
 
         Suspend the route for a random, realistic, but short amount of time.
         """
-        await asyncio.sleep(random.randint(0, 2))
+        await asyncio.sleep(random.random())
         msg.routes[route] = True
         logger.info("Handled route %s for %s", route, msg.id)

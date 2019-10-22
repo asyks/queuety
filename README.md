@@ -1,10 +1,13 @@
 # queuety
 
-A cute little queue implementation with asynchronous publish and subscribe routines.
+A little queue implementation with asynchronous publish and subscribe routines.
+
+Based on Lynn Root's ([@econchick](https://github.com/econchick)) blog series
+["asyncio: We Did It Wrong"](https://www.roguelynn.com/words/asyncio-we-did-it-wrong/).
 
 ## Usage
 
-Building and running queuety
+Building and running
 ```
 > docker build -t queuety .
 ...

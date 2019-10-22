@@ -1,4 +1,3 @@
-from unittest import mock
 import asyncio
 
 import pytest
@@ -24,12 +23,33 @@ class TestSimulatedSubscriber:
             t for t in asyncio.all_tasks() if t is not asyncio.current_task()
         ]
 
-        mock_handle_message.assert_not_called()  # <-- sanity check
+        mock_handle_message.assert_not_called()  # Sanity check
 
         await asyncio.gather(*ret_tasks)
 
         assert 1 == len(ret_tasks)
-        mock_handle_message.assert_called_once_with(mock.ANY, message)
+        mock_handle_message.assert_called_once_with(subscriber, message)
+
+    async def test_handle_message(self, mock_queue, message, mock_sleep, create_mock_coro):
+        mock_handle_route, _ = create_mock_coro(
+            "queuety.sub.SimulatedSubscriber.handle_route"
+        )
+        mock_handle_route.return_value = []
+
+        mock_sub_extend, _ = create_mock_coro(
+            "queuety.sub.SimulatedSubscriber.extend"
+        )
+        mock_sub_acknowledge, _ = create_mock_coro(
+            "queuety.sub.SimulatedSubscriber.acknowledge"
+        )
+
+        subscriber = queuety.sub.SimulatedSubscriber(queue=mock_queue)
+
+        await subscriber.handle_message(message)
+
+        mock_handle_route.assert_called_once_with(
+            subscriber, constants.TEST_ROUTE, message
+        )
 
     async def test_handle_route(self, mock_queue, message, mock_sleep):
         assert message.routes[constants.TEST_ROUTE] is False  # Sanity check

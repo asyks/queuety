@@ -59,3 +59,24 @@ class TestSimulatedSubscriber:
 
         assert message.routes[constants.TEST_ROUTE] is True
         assert mock_sleep.call_count == 1
+
+    async def test_extend(self, mocker, mock_queue, message, mock_sleep):
+        event = asyncio.Event()
+        mock_event_is_set = mocker.patch.object(asyncio.Event, "is_set")
+        mock_event_is_set.side_effect = [False, True]
+
+        subscriber = queuety.sub.SimulatedSubscriber(queue=mock_queue)
+        await subscriber.extend(message, event)
+
+        assert message.extend_count == 1
+        assert mock_sleep.call_count == 1
+
+    async def test_acknowledge(self, mocker, mock_queue, message, mock_sleep):
+        event = asyncio.Event()
+        event.set()
+
+        subscriber = queuety.sub.SimulatedSubscriber(queue=mock_queue)
+        await subscriber.acknowledge(message, event)
+
+        assert message.acked is True
+        assert mock_sleep.call_count == 1

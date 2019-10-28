@@ -26,6 +26,18 @@ def create_mock_coro(mocker, monkeypatch):
 
 
 @pytest.fixture
+def event_loop(event_loop, mocker):
+    new_loop = asyncio.get_event_loop_policy().new_event_loop()
+    asyncio.set_event_loop(new_loop)
+    new_loop._close = new_loop.close
+    new_loop.close = mocker.Mock()
+
+    yield new_loop
+
+    new_loop._close()
+
+
+@pytest.fixture
 def mock_sleep(create_mock_coro):
     mock, _ = create_mock_coro(to_patch="asyncio.sleep")
     return mock
@@ -55,3 +67,9 @@ def mock_put(mock_queue, create_mock_coro):
     mock_put, coro_put = create_mock_coro()
     mock_queue.put = coro_put
     return mock_put
+
+
+@pytest.fixture
+def mock_gather(create_mock_coro):
+    mock, _ = create_mock_coro("asyncio.gather")
+    return mock
